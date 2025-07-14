@@ -69,31 +69,62 @@ function restoreHighlights() {
       const container = getNodeByXPath(xpath);
       if (!container) return;
 
+      // Collect all text nodes inside the container (depth-first)
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
       const textNodes = [];
       while (walker.nextNode()) {
-        textNodes.push(walker.currentNode);
-      }
-
-      for (const node of textNodes) {
-        if (node.parentNode && node.parentNode.classList.contains("webmarker-highlight")) continue;
-
-        const index = node.textContent.indexOf(text);
-        if (index !== -1) {
-          const before = node.textContent.slice(0, index);
-          const after = node.textContent.slice(index + text.length);
-
-          const beforeNode = document.createTextNode(before);
-          const afterNode = document.createTextNode(after);
-
-          const wrapper = document.createElement("div");
-          wrapper.innerHTML = html;
-          const highlightNode = wrapper.firstChild;
-
-          node.replaceWith(beforeNode, highlightNode, afterNode);
-          break;
+        const node = walker.currentNode;
+        if (!node.parentNode.classList.contains("webmarker-highlight")) {
+          textNodes.push(node);
         }
       }
+
+      // Combine text of all nodes to search for full highlighted text
+      const fullText = textNodes.map(n => n.textContent).join("");
+      const matchIndex = fullText.indexOf(text);
+      if (matchIndex === -1) return;
+
+      // Figure out where the match starts and ends across text nodes
+      let currentPos = 0;
+      let startNode, startOffset, endNode, endOffset;
+      for (let node of textNodes) {
+        const len = node.textContent.length;
+        if (!startNode && currentPos + len >= matchIndex) {
+          startNode = node;
+          startOffset = matchIndex - currentPos;
+        }
+        if (currentPos + len >= matchIndex + text.length) {
+          endNode = node;
+          endOffset = matchIndex + text.length - currentPos;
+          break;
+        }
+        currentPos += len;
+      }
+
+      // Create the range
+      const range = document.createRange();
+      try {
+        range.setStart(startNode, startOffset);
+        range.setEnd(endNode, endOffset);
+      } catch (e) {
+        console.warn("Skipping invalid range", e);
+        return;
+      }
+
+      // Create highlight element
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = html;
+      const highlightNode = wrapper.firstChild;
+
+      // Extract content and wrap
+      // const contents = range.extractContents();
+      // highlightNode.appendChild(contents);
+      // range.insertNode(highlightNode);
+
+      //upar wali 3 lines se 2 bar restore ho raha tha highlight
+
+      range.deleteContents();
+      range.insertNode(highlightNode);
     });
   });
 }
