@@ -61,15 +61,18 @@ function highlightSelection() {
 
 
 
-function restoreHighlights() {
+function pprestoreHighlights() {
   chrome.storage.local.get([window.location.href], (result) => {
-    const highlights = result[window.location.href] || [];
+    let highlights = result[window.location.href] || [];
+
+    // Sort longer highlights first
+    highlights.sort((a, b) => b.text.length - a.text.length);
 
     highlights.forEach(({ xpath, html, text }) => {
       const container = getNodeByXPath(xpath);
       if (!container) return;
 
-      // Collect all text nodes inside the container (depth-first)
+      // Rebuild text node list each time (because DOM is changing)
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
       const textNodes = [];
       while (walker.nextNode()) {
@@ -79,12 +82,12 @@ function restoreHighlights() {
         }
       }
 
-      // Combine text of all nodes to search for full highlighted text
+      // Combine text to locate match
       const fullText = textNodes.map(n => n.textContent).join("");
       const matchIndex = fullText.indexOf(text);
       if (matchIndex === -1) return;
 
-      // Figure out where the match starts and ends across text nodes
+      // Map match position back to text nodes
       let currentPos = 0;
       let startNode, startOffset, endNode, endOffset;
       for (let node of textNodes) {
@@ -101,7 +104,8 @@ function restoreHighlights() {
         currentPos += len;
       }
 
-      // Create the range
+      if (!startNode || !endNode) return;
+
       const range = document.createRange();
       try {
         range.setStart(startNode, startOffset);
@@ -111,17 +115,10 @@ function restoreHighlights() {
         return;
       }
 
-      // Create highlight element
+      // Wrap the range in highlight span
       const wrapper = document.createElement("div");
       wrapper.innerHTML = html;
       const highlightNode = wrapper.firstChild;
-
-      // Extract content and wrap
-      // const contents = range.extractContents();
-      // highlightNode.appendChild(contents);
-      // range.insertNode(highlightNode);
-
-      //upar wali 3 lines se 2 bar restore ho raha tha highlight
 
       range.deleteContents();
       range.insertNode(highlightNode);
@@ -145,10 +142,26 @@ chrome.runtime.onMessage.addListener((msg) => {
   console.log("Got message:", msg);
   if (msg.action === "highlight") highlightSelection();
   if (msg.action === "clearHighlights") clearHighlights();
+  if (msg.action === "pprestoreHighlights") pprestoreHighlights();
 });
 
-window.addEventListener("load", () => {
-  setTimeout(restoreHighlights, 500); // Delay helps with some dynamic pages
+let restored = false;
+
+function safeRestore() {
+  if (!restored) {
+    restored = true;
+    pprestoreHighlights();
+  }
+}
+// Fallback timer
+setTimeout(safeRestore, 5000);
+// Also observe dynamic DOM changes
+const observer = new MutationObserver(() => {
+  const text = document.body.innerText;
+  if (text && text.length > 1000) {
+    safeRestore();        // Restore once meaningful content appears
+    observer.disconnect(); // Stop observing
+  }
 });
 
-
+observer.observe(document.body, { childList: true, subtree: true });

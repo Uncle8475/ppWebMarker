@@ -9,3 +9,10 @@ document.getElementById("clearBtn").addEventListener("click", () => {
     chrome.tabs.sendMessage(tabs[0].id, { action: "clearHighlights" });
   });
 });
+
+document.getElementById("refresh").addEventListener("click", () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.sendMessage(tabs[0].id, { action: "pprestoreHighlights" });
+  });
+});
+
