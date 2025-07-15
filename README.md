@@ -1,4 +1,5 @@
-# Markaro (WebMarker)
+# Markaro (WebMarker)<img width="20" height="25" alt="icon" src="https://github.com/user-attachments/assets/0f1e80e0-47e0-44e0-ad39-afcc54b79a6e" />
+
 
 **Markaro** is a lightweight Chrome extension that allows users to highlight text on any webpage. Highlights are stored locally and automatically restored upon revisiting the site, even on dynamic web pages.
 
