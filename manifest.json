@@ -3,7 +3,15 @@
   "name": "WebMarker",
   "version": "1.0",
   "description": "Highlight and annotate text on any webpage.",
-  "permissions": ["storage", "scripting", "activeTab"],
+  "permissions": ["storage", "scripting", "activeTab", "commands"],
+  "commands": {
+    "highlight-selection": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+H"
+      },
+      "description": "Highlight selected text"
+    }
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

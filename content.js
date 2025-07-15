@@ -126,10 +126,6 @@ function pprestoreHighlights() {
   });
 }
 
-
-
-
-
 function clearHighlights() {
   document.querySelectorAll(".webmarker-highlight").forEach((el) => {
     const text = document.createTextNode(el.textContent);
@@ -155,7 +151,7 @@ function safeRestore() {
 }
 // Fallback timer
 setTimeout(safeRestore, 5000);
-// Also observe dynamic DOM changes
+//to observe dynamic DOM changes
 const observer = new MutationObserver(() => {
   const text = document.body.innerText;
   if (text && text.length > 1000) {
