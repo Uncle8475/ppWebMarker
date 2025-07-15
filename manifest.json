@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "WebMarker",
+  "name": "Markaro",
   "version": "1.0",
   "description": "Highlight and annotate text on any webpage.",
   "permissions": ["storage", "scripting", "activeTab", "commands"],

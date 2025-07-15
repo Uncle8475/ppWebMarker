@@ -68,11 +68,10 @@ function pprestoreHighlights() {
     // Sort longer highlights first
     highlights.sort((a, b) => b.text.length - a.text.length);
 
-    highlights.forEach(({ xpath, html, text }) => {
+    for (const { xpath, html, text } of highlights) {
       const container = getNodeByXPath(xpath);
-      if (!container) return;
+      if (!container) continue;
 
-      // Rebuild text node list each time (because DOM is changing)
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
       const textNodes = [];
       while (walker.nextNode()) {
@@ -82,47 +81,50 @@ function pprestoreHighlights() {
         }
       }
 
-      // Combine text to locate match
       const fullText = textNodes.map(n => n.textContent).join("");
       const matchIndex = fullText.indexOf(text);
-      if (matchIndex === -1) return;
+      if (matchIndex === -1) continue;
 
-      // Map match position back to text nodes
-      let currentPos = 0;
+      let pos = 0;
       let startNode, startOffset, endNode, endOffset;
       for (let node of textNodes) {
         const len = node.textContent.length;
-        if (!startNode && currentPos + len >= matchIndex) {
+
+        if (!startNode && pos + len >= matchIndex) {
           startNode = node;
-          startOffset = matchIndex - currentPos;
+          startOffset = matchIndex - pos;
         }
-        if (currentPos + len >= matchIndex + text.length) {
+        if (startNode && pos + len >= matchIndex + text.length) {
           endNode = node;
-          endOffset = matchIndex + text.length - currentPos;
+          endOffset = matchIndex + text.length - pos;
           break;
         }
-        currentPos += len;
+
+        pos += len;
       }
 
-      if (!startNode || !endNode) return;
+      if (!startNode || !endNode) continue;
 
-      const range = document.createRange();
       try {
+        const range = document.createRange();
         range.setStart(startNode, startOffset);
         range.setEnd(endNode, endOffset);
-      } catch (e) {
-        console.warn("Skipping invalid range", e);
-        return;
+
+        // Confirm selected text matches stored text
+        const selectedText = range.toString().trim();
+        if (selectedText !== text.trim()) continue;
+
+        // Create a fresh highlight span (not from stored HTML)
+        const span = document.createElement("span");
+        span.className = "webmarker-highlight";
+        span.style.backgroundColor = "yellow";
+
+        // Wrap safely
+        range.surroundContents(span);
+      } catch (err) {
+        console.warn("⚠️ Could not restore highlight:", err);
       }
-
-      // Wrap the range in highlight span
-      const wrapper = document.createElement("div");
-      wrapper.innerHTML = html;
-      const highlightNode = wrapper.firstChild;
-
-      range.deleteContents();
-      range.insertNode(highlightNode);
-    });
+    }
   });
 }
 
