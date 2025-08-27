@@ -10,7 +10,7 @@
 - Auto-restoration of highlights on page reload
 - Manual refresh option for dynamic content
 - View all saved highlights in a clean popup UI
-- Keyboard shortcut: `Ctrl + Alt + H` to quickly highlight text
+- Keyboard shortcut: `Alt + Shift + H` to quickly highlight text
 
 ## Tech Stack
 
@@ -23,7 +23,7 @@
 1. Clone or download the repository.
 2. Go to `chrome://extensions/`, enable Developer Mode.
 3. Click **Load unpacked** and select the project directory.
-4. Select text on any webpage and press `Ctrl + Alt + H`, or use the popup UI.
+4. Select text on any webpage and press `Alt + Shift + H`, or use the popup UI.
 5. Highlights are stored and restored automatically when revisiting the page.
 
 Note: This extension currently works only on Chromium-based browsers.
