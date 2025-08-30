@@ -7,7 +7,7 @@
   "commands": {
     "highlight-selection": {
       "suggested_key": {
-        "default": "Alt+Shift+H"
+        "default": "Ctrl+Shift+H"
       },
       "description": "Highlight selected text"
     }
